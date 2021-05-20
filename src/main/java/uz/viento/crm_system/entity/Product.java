@@ -44,7 +44,7 @@ public class Product extends AbsUUIDEntity {
     private List<Attachment> attachmentList;
 
     @ManyToOne(optional = false)
-    private Category category;
+    private Category category;  
 
     @ManyToOne
     private CurrencyType currencyType;

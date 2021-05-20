@@ -57,8 +57,8 @@ public class ProductService {
                 addingProductDto.getNameUz()
 
         );
-        if(exists)
-        return new ResponseApi("This product already exists", false);
+        if (exists)
+            return new ResponseApi("This product already exists", false);
 
         List<Attachment> attachmentList = attachmentRepository.findAllById(addingProductDto.getAttachmentId());
 
@@ -198,7 +198,7 @@ public class ProductService {
 
     }
 
-    public Page<Product> getAllProduct(int page) {
+    public Page<ResProduct> getAllProduct(int page) {
 
         //  every time you get information this method is working and if product is expired this set it expired true
         List<Product> allList = productRepository.findAll();
@@ -211,10 +211,31 @@ public class ProductService {
             }
             productRepository.save(product);
         }
-        Pageable pageable = PageRequest.of(page, 15);
-        Page<Product> all = productRepository.findAll(pageable);
+        List<Product> all = productRepository.findAll();
+        List<ResProduct> productList = new ArrayList<>();
+        for (Product product : all) {
+            ResProduct resProduct =
+                    new ResProduct(
+                            product.getNameUz(),
+                            product.getNameRu(),
+                            product.getNameEng(),
+                            product.getDescriptionUz(),
+                            product.getDescriptionRu(),
+                            product.getDescriptionEng(),
+                            product.getSerialNumber(),
+                            product.getMadeIn(),
+                            product.isAvailable(),
+                            product.getAttachmentList(),
+                            product.getCategory().getName(),
+                            getSellingPrice.findValidSelling(product),
+                            product.getExpireDate()
+                    );
+            productList.add(resProduct);
+        }
+        PageRequest pageRequest = PageRequest.of(page, 15);
+        PageImpl<ResProduct> resProducts = new PageImpl<>(productList, pageRequest, productList.size());
 
-        return all;
+        return resProducts;
     }
 
     public Page<ResProduct> getAvailableProducts(int page) {

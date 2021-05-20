@@ -58,7 +58,7 @@ public class ProductController {
 
     @GetMapping("/get-all")
     public ResponseEntity<?> getAllProducts(@RequestParam int page) {
-        Page<Product> allProduct = productService.getAllProduct(page);
+        Page<ResProduct> allProduct = productService.getAllProduct(page);
         return ResponseEntity.ok(allProduct);
     }
 
