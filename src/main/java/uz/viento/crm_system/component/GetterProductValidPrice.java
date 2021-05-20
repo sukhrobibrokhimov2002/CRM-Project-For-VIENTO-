@@ -1,0 +1,39 @@
+package uz.viento.crm_system.component;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import uz.viento.crm_system.entity.Product;
+import uz.viento.crm_system.entity.ProductPrice;
+import uz.viento.crm_system.repository.ProductPriceRepository;
+import uz.viento.crm_system.repository.ProductRepository;
+
+import java.util.List;
+
+@Component
+public class GetterProductValidPrice {
+
+    @Autowired
+    ProductRepository productRepository;
+    @Autowired
+    ProductPriceRepository productPriceRepository;
+
+    public Double findValidSelling(Product product) {
+        List<ProductPrice> productPrices = product.getProductPrices();
+        for (ProductPrice productPrice : productPrices) {
+            if (productPrice.isValid()) {
+                return productPrice.getSellingPrice();
+            }
+        }
+        return null;
+    }
+
+    public ProductPrice findValidPrice(Product product) {
+        List<ProductPrice> productPrices = product.getProductPrices();
+        for (ProductPrice productPrice : productPrices) {
+            if (productPrice.isValid()) {
+                return productPrice;
+            }
+        }
+        return null;
+    }
+}
