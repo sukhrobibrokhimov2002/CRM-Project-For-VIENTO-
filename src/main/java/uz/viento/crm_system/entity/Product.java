@@ -1,5 +1,6 @@
 package uz.viento.crm_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,6 +34,7 @@ public class Product extends AbsUUIDEntity {
     private String madeIn;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties(value = "product",allowSetters = true)
     private List<ProductPrice> productPrices;
 
     @ManyToOne(optional = false)

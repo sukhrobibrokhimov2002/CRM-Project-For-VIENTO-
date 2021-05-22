@@ -2,6 +2,7 @@ package uz.viento.crm_system.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +34,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
 
 
-    public ResponseApi registerUser(RegisterDto userDto) throws IOException {
+    public ResponseApi registerAdmin(RegisterDto userDto) throws IOException {
         boolean existsByPhoneNumber = userRepository.existsByPhoneNumber(userDto.getPhoneNumber());
         if (existsByPhoneNumber) return new ResponseApi("User already have", false);
         if (!userDto.getPassword().equals(userDto.getPrePassword()))
@@ -51,35 +52,6 @@ public class UserService {
         return new ResponseApi("Successfully registered", true);
     }
 
-    public ResponseApi addUser(AddingUserDto addingUserDto) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        List<Roles> roles = user.getRoles();
-        boolean anyMatch = roles.stream().anyMatch(roles1 -> {
-            roles1.getRoleName().equals(RoleName.ROLE_ADMIN.name());
-            return true;
-        });
-
-        if (anyMatch) {
-            boolean existsByPhoneNumber = userRepository.existsByPhoneNumber(addingUserDto.getPhoneNumber());
-            if (existsByPhoneNumber) return new ResponseApi("This phone number is already exists", false);
-//            Optional<Attachment> optionalAttachment = attachmentRepository.findById(addingUserDto.getAttachmentId());
-//            if (!optionalAttachment.isPresent())
-//                return new ResponseApi("Attachment not found", false);
-
-            List<Roles> allById = roleRepository.findAllById(addingUserDto.getRoleId());
-            User users = new User();
-
-            users.setPassword(passwordEncoder.encode(addingUserDto.getPassword()));
-            users.setRoles(allById);
-            users.setFullName(addingUserDto.getFullName());
-            users.setPhoneNumber(addingUserDto.getPhoneNumber());
-            userRepository.save(users);
-            return new ResponseApi("Successfully added", true);
-        } else {
-            return new ResponseApi("You do'nt have permission for that", true);
-
-        }
-    }
 
     public ResponseApi editUserInfo(AddingUserDto addingUserDto, @CurrentUser User user, UUID id) {
         List<Roles> roles = user.getRoles();
@@ -87,14 +59,11 @@ public class UserService {
         if (anyMatch) {
             Optional<User> userRepositoryById = userRepository.findById(id);
             if (!userRepositoryById.isPresent()) return new ResponseApi("User not found", false);
-            List<Roles> allById = roleRepository.findAllById(addingUserDto.getRoleId());
 
             boolean existsByPhoneNumberAndIdNot = userRepository.existsByPhoneNumberAndIdNot(addingUserDto.getPhoneNumber(), id);
             if (existsByPhoneNumberAndIdNot) return new ResponseApi("Phone Number is already exists", false);
             User user1 = userRepositoryById.get();
-            user1.setRoles(allById);
             user1.setPhoneNumber(addingUserDto.getPhoneNumber());
-            user1.setPassword(passwordEncoder.encode(addingUserDto.getPassword()));
             user1.setFullName(addingUserDto.getFullName());
             userRepository.save(user1);
             return new ResponseApi("Successfully edited", true);
@@ -104,15 +73,10 @@ public class UserService {
 
     }
 
+
     public boolean checkPassword(String oldPassword, String userPassword) {
         return passwordEncoder.matches(oldPassword, userPassword);
     }
-
-
-//    public boolean checkAdmin(User user) {
-//        List<Roles> roles = user.getRoles();
-//        return roles.stream().anyMatch(roles1 -> roles1.equals(RoleName.ROLE_ADMIN));
-//    }
 
 
     public ResponseApi changeUserPassword(ReqChangePassword reqChangePassword, User currentUser) {
@@ -147,17 +111,18 @@ public class UserService {
         return new ResponseApi("Phone Number successfully changed", true);
     }
 
-    public ResponseApi addAdditionalPhone(UUID userId, String phoneNumber) {
+    public ResponseApi addAdditionalPhone(UUID userId, ReqAddAdditionalPhone reqAddAdditionalPhone) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (!optionalUser.isPresent()) return new ResponseApi("User not found", false);
-        boolean existsByAdditionalPhoneNumber = userRepository.existsByAdditionalPhoneNumber(phoneNumber);
+        boolean existsByAdditionalPhoneNumber = userRepository.existsByAdditionalPhoneNumber(reqAddAdditionalPhone.getNewPhoneNumber());
 
         if (existsByAdditionalPhoneNumber) return new ResponseApi("This phone Number is already exists", false);
 
         User user = optionalUser.get();
-        user.setAdditionalPhoneNumber(phoneNumber);
+        user.setAdditionalPhoneNumber(reqAddAdditionalPhone.getNewPhoneNumber());
         return new ResponseApi("Successfully added", true);
     }
+
 
     public ResponseApi changeUserPhoneNumber(String phoneNumber, ReqChangeNumber reqChangeNumber) {
         Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(phoneNumber);
@@ -172,30 +137,59 @@ public class UserService {
         return new ResponseApi("Successfully changed", true);
     }
 
-    public ResponseApi enableOrDisableUser(UUID id, boolean enable) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (!optionalUser.isPresent()) return new ResponseApi("User not found", false);
-        User user = optionalUser.get();
-        user.setEnabled(enable);
-        userRepository.save(user);
-        return new ResponseApi("Enable status successfully changed", true);
 
-    }
+    public Page<ResUser> getAllUser(int page) {
 
-    public Page<User> getAllUser(int page) {
+        List<ResUser> userList = new ArrayList<>();
 
         PageRequest pageRequest = PageRequest.of(page, 10);
-        Page<User> userRepositoryAll = userRepository.findAll(pageRequest);
-        return userRepositoryAll;
+        List<User> allByPassword = userRepository.findAllByPassword(null);
+        for (User user : allByPassword) {
+            ResUser resUser = new ResUser(
+                    user.getFullName(),
+                    user.getPhoneNumber(),
+                    user.getAddress()
+            );
+            userList.add(resUser);
+        }
+        Page<ResUser> resUsers = new PageImpl<>(userList, pageRequest, userList.size());
+        return resUsers;
     }
 
-    public User getById(UUID id) {
+    public ResUser getById(UUID id) {
         Optional<User> repository = userRepository.findById(id);
-        return repository.orElse(null);
+        if (!repository.isPresent()) return null;
+        User user = repository.get();
+        ResUser resUser = new ResUser(
+                user.getFullName(),
+                user.getPhoneNumber(),
+                user.getAddress()
+        );
+        return resUser;
     }
 
-    public User getByPhoneNumber(String phoneNumber) {
-        Optional<User> phoneNumber1 = userRepository.findByPhoneNumber(phoneNumber);
-        return phoneNumber1.orElse(null);
+    public ResUser getByPhoneNumber(String phoneNumber) {
+        Optional<User> optionalUser = userRepository.findByPhoneNumber(phoneNumber);
+        if (!optionalUser.isPresent()) return null;
+        User user = optionalUser.get();
+        ResUser resUser = new ResUser(
+                user.getFullName(),
+                user.getPhoneNumber(),
+                user.getAddress()
+        );
+        return resUser;
+    }
+
+    public ResponseApi forgotPassword(ReqForgetPassword reqForgetPassword) {
+        Optional<User> optionalUser = userRepository.findByPhoneNumber(reqForgetPassword.getPhoneNumber());
+        if (!optionalUser.isPresent()) return new ResponseApi("User not found", false);
+
+        if (!reqForgetPassword.getNewPassword().equals(reqForgetPassword.getConfirmPassword()))
+            return new ResponseApi("Passwords don't match", false);
+
+        User user = optionalUser.get();
+        user.setPassword(reqForgetPassword.getNewPassword());
+        userRepository.save(user);
+        return new ResponseApi("Password successfully changed", true);
     }
 }

@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Date;
-import java.time.LocalDate;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReqPeopleWhoCalledToChangePhnOrDate {
+public class ReqForgetPassword {
     private String phoneNumber;
-    private LocalDate shouldCallDate;
+    private String newPassword;
+    private String confirmPassword;
+
 }

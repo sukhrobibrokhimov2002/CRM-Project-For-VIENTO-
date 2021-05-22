@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 import uz.viento.crm_system.entity.enums.StatusOrder;
 import uz.viento.crm_system.entity.template.AbsUUIDEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -21,12 +18,20 @@ import java.util.List;
 @Entity(name = "orders")
 public class Order extends AbsUUIDEntity {
 
-    private String name;
+    private String comment;
 
     private Timestamp orderDate;
 
     @ManyToOne
     private CurrencyType currencyType;
+
+    @OneToMany(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "order_id")
+    private List<OrderOutputService> orderOutputServiceList;
+
+    @OneToMany(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "order_id")
+    private List<OrderOutputProduct> orderOutputProducts;
 
     @Column(unique = true)
     private String code;
@@ -34,10 +39,14 @@ public class Order extends AbsUUIDEntity {
     @ManyToOne
     private User users;
 
+    private String phoneNumber;
+    private String address;
     private Double summa;
 
-    private boolean payed;
 
+
+
+    @Enumerated(EnumType.STRING)
     private StatusOrder statusOrder;
 
 

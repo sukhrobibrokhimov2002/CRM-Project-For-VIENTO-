@@ -1,5 +1,6 @@
 package uz.viento.crm_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,8 @@ public class ProductPrice extends AbsLongEntity {
     private Double originalPrice;
     private Double sellingPrice;
     private Date changedDate;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = "productPrices",allowSetters = true)
     private Product product;
     private boolean valid;
 

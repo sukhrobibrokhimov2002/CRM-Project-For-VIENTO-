@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReqPeopleWhoCalledToChangePhnOrDate {
-    private String phoneNumber;
-    private LocalDate shouldCallDate;
+public class OrderOutputServiceDto {
+    private UUID serviceId;
+
 }

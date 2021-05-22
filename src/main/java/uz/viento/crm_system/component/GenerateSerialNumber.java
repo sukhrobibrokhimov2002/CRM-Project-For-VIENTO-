@@ -55,8 +55,10 @@ public class GenerateSerialNumber {
     }
 
     public static void main(String[] args) {
-        Date date = Date.valueOf("2022-12-12");
-        System.out.println(date.after(new Date(System.currentTimeMillis())));
+        Date date = new Date(System.currentTimeMillis());
+        Date date2 = new Date(System.currentTimeMillis());
+        Date date1 = Date.valueOf("2021-05-20");
+        System.out.println(date1.compareTo(date));
     }
 
 

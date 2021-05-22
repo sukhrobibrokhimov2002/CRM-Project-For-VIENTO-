@@ -13,10 +13,9 @@ import java.util.List;
 public class AddingUserDto {
     @NotBlank(message = "FullName must not be empty")
     private String fullName;
-    @NotBlank(message = "Password must not be empty")
-    private String password;
     @NotBlank(message = "PhoneNumber must not be empty")
     private String phoneNumber;
-    private List<Long> roleId;
-    private Integer attachmentId;
+    private String address;
+
+
 }

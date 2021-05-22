@@ -10,6 +10,7 @@ import uz.viento.crm_system.entity.template.AbsLongEntity;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -28,7 +29,7 @@ public class PeopleWhoCalled extends AbsLongEntity {
     private String phoneNumber;
 
     private Date calledDate;
-    private Date whenShouldCall;
+    private LocalDate whenShouldCall;
 
     private String comment;
 

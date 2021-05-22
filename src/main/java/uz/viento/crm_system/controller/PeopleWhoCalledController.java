@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import uz.viento.crm_system.entity.PeopleWhoCalled;
 import uz.viento.crm_system.payload.PeopleWhoCalledDto;
 import uz.viento.crm_system.payload.ReqPeopleWhoCalledToChangePhnOrDate;
+import uz.viento.crm_system.payload.ResPeopleWhoCalled;
 import uz.viento.crm_system.payload.ResponseApi;
 import uz.viento.crm_system.service.PeopleWhoCalledService;
 
@@ -44,26 +45,26 @@ public class PeopleWhoCalledController {
 
     @GetMapping("/get-missed-people")
     private ResponseEntity<?> getMissedPeople(@RequestParam int page) {
-        Page<PeopleWhoCalled> missedPeople = service.getMissedPeople(page);
+        Page<ResPeopleWhoCalled> missedPeople = service.getMissedPeople(page);
         return ResponseEntity.ok(missedPeople);
     }
 
 
 @GetMapping("/get-people-for-today")
     private ResponseEntity<?> getPeopleForToday() {
-    List<PeopleWhoCalled> peopleForCallingToday = service.getPeopleForCallingToday();
+    List<ResPeopleWhoCalled> peopleForCallingToday = service.getPeopleForCallingToday();
     return ResponseEntity.ok(peopleForCallingToday);
     }
 
     @GetMapping("/get-should-call-people-in-future")
     private ResponseEntity<?> getPeopleForFuture(@RequestParam int page) {
-        Page<PeopleWhoCalled> missedPeople = service.getShouldCallPeople(page);
+        Page<ResPeopleWhoCalled> missedPeople = service.getShouldCallPeople(page);
         return ResponseEntity.ok(missedPeople);
     }
 
  @GetMapping("/get-all")
     private ResponseEntity<?> getAll(@RequestParam int page) {
-        Page<PeopleWhoCalled> missedPeople = service.getAll(page);
+        Page<ResPeopleWhoCalled> missedPeople = service.getAll(page);
         return ResponseEntity.ok(missedPeople);
     }
 

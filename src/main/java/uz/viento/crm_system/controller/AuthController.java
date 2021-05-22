@@ -33,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto)throws IOException {
-        ResponseApi responseApi = userService.registerUser(registerDto);
+        ResponseApi responseApi = userService.registerAdmin(registerDto);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }

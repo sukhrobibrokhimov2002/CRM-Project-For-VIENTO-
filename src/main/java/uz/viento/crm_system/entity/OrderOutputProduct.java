@@ -6,9 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import uz.viento.crm_system.entity.template.AbsUUIDEntity;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -17,15 +15,17 @@ import javax.persistence.ManyToOne;
 @Entity
 public class OrderOutputProduct extends AbsUUIDEntity {
     @ManyToOne
-    private Service service;
-
-    @ManyToOne
     private Product product;
+    @ManyToOne
+    private ProductPrice productPrice;
 
     private Double amount;
 
     private Double totalPrice;
 
-    @ManyToOne
-    private Order order;
+
+
+
+
+
 }

@@ -4,13 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Date;
-import java.time.LocalDate;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReqPeopleWhoCalledToChangePhnOrDate {
-    private String phoneNumber;
-    private LocalDate shouldCallDate;
+public class ReqAddAdditionalPhone {
+    private String newPhoneNumber;
 }

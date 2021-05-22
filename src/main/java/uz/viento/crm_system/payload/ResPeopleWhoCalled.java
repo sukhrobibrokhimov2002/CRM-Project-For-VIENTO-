@@ -12,22 +12,35 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PeopleWhoCalledDto {
-    private String phoneNumber;
-    private ReqCreateUserDto reqCreateUserDto;
+public class ResPeopleWhoCalled {
 
-    private List<UUID> serviceId;
-    private List<UUID> productId;
+
+    private String fullName;
+    private String userPhoneNumber;
+    private List<String> serviceName;
+    private List<String> productName;
+
+    private String phoneNumber;
+
     private LocalDate whenShouldCall;
+
     private String comment;
 
+    private Status status;
+
+    public ResPeopleWhoCalled(List<String> serviceName, List<String> productName, String phoneNumber, LocalDate whenShouldCall, String comment, Status status) {
+        this.serviceName = serviceName;
+        this.productName = productName;
+        this.phoneNumber = phoneNumber;
+        this.whenShouldCall = whenShouldCall;
+        this.comment = comment;
+        this.status = status;
+    }
 }

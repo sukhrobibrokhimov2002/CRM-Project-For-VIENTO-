@@ -11,14 +11,18 @@ import java.util.List;
 public interface PeopleWhoCalledRepository extends JpaRepository<PeopleWhoCalled, Long> {
 
 
-    @Query(value = "select * from people_who_called where when_should_call>NOW()", nativeQuery = true)
-    Page<PeopleWhoCalled> getMissedPeople(Pageable pageable);
+    @Query(value = "select * from people_who_called where when_should_call<CAST( NOW() AS Date )", nativeQuery = true)
+    List<PeopleWhoCalled> getMissedPeople();
 
-    @Query(value = "select * from people_who_called where when_should_call=NOW()",nativeQuery = true)
+    @Query(value = "select * from people_who_called where when_should_call=CAST( NOW() AS Date )", nativeQuery = true)
     List<PeopleWhoCalled> getPeopleForCallingToday();
 
-    @Query(value = "select * from people_who_called where when_should_call<NOW()", nativeQuery = true)
-    Page<PeopleWhoCalled> getShouldCallPeople(Pageable pageable);
+    @Query(value = "select * from people_who_called where when_should_call>CAST( NOW() AS Date );", nativeQuery = true)
+    List<PeopleWhoCalled> getShouldCallPeople();
+
+    boolean existsByPhoneNumber(String phoneNumber);
+
+    PeopleWhoCalled findTopByPhoneNumber(String phoneNumber);
 
 
 }

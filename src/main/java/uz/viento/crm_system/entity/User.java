@@ -28,12 +28,15 @@ public class User extends AbsUUIDEntity implements UserDetails {
 
     private String additionalPhoneNumber;
 
-    @OneToOne
-    private Attachment attachment;
 
     private String password;
+
+
     @ManyToMany
     private List<Roles> roles;
+
+    private String address;
+
 
     @Column(unique = true)
     private Long chatId;
