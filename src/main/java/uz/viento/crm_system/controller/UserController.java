@@ -28,14 +28,14 @@ public class UserController {
         return ResponseEntity.status(409).body(responseApi);
 
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PatchMapping("/change-own-password")
     public ResponseEntity<?> changePassword(@RequestBody ReqChangePassword reqChangePassword, @CurrentUser User user) {
         ResponseApi responseApi = userService.changeUserPassword(reqChangePassword, user);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PatchMapping("/forget-password")
     public ResponseEntity<?> forgetPassword(@RequestBody ReqForgetPassword reqForgetPassword) {
         ResponseApi responseApi = userService.forgotPassword(reqForgetPassword);
@@ -44,7 +44,7 @@ public class UserController {
 
 
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PostMapping("/change-own-phoneNumber")
     public ResponseEntity<?> changePhoneNumber(@RequestBody ReqChangePassword reqChangePassword, @CurrentUser User user) {
         ResponseApi responseApi = userService.changeUserOwnPhoneNumber(user, reqChangePassword);
@@ -54,7 +54,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
-    @PostMapping("/addAdditionalPhone/{userId}")
+    @PostMapping("/add-additional-phone/{userId}")
     public ResponseEntity<?> addAdditionalPhone(@RequestBody ReqAddAdditionalPhone reqAddAdditionalPhone, @PathVariable UUID userId) {
         ResponseApi responseApi = userService.addAdditionalPhone(userId, reqAddAdditionalPhone);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
@@ -64,28 +64,28 @@ public class UserController {
 
 
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
-    @GetMapping("/getAll")
+    @GetMapping("/get-all")
     public ResponseEntity<?> getAllUser(@RequestParam Integer page) {
         Page<ResUser> allUser = userService.getAllUser(page);
         return ResponseEntity.ok(allUser);
     }
 
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
-    @GetMapping("/getById/{id}")
+    @GetMapping("/get-by-id/{id}")
     public ResponseEntity<?> getUserById(@PathVariable UUID id) {
         ResUser byId = userService.getById(id);
         return ResponseEntity.ok(byId);
     }
 
     @PreAuthorize("hasRole(ROLE_ADMIN)")
-    @GetMapping("/getByPhoneNumber")
+    @GetMapping("/get-by-phone-number")
     public ResponseEntity<?> getUserById(@RequestParam String phoneNumber) {
         ResUser byId = userService.getByPhoneNumber(phoneNumber);
         return ResponseEntity.ok(byId);
     }
 
     @PreAuthorize("hasRole(ROLE_ADMIN)")
-    @PostMapping("/changeUserPhoneNumber")
+    @PostMapping("/change-user-phone-number")
     public ResponseEntity<?> changeUsersPhoneNumber(@RequestParam String phoneNumber, @RequestBody ReqChangeNumber reqChangeNumber) {
         ResponseApi responseApi = userService.changeUserPhoneNumber(phoneNumber, reqChangeNumber);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);

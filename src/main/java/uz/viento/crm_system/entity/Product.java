@@ -1,10 +1,8 @@
 package uz.viento.crm_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import uz.viento.crm_system.entity.attachment.Attachment;
 import uz.viento.crm_system.entity.template.AbsUUIDEntity;
 
@@ -13,9 +11,10 @@ import java.util.Date;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 @Entity
 public class Product extends AbsUUIDEntity {
 
@@ -34,7 +33,7 @@ public class Product extends AbsUUIDEntity {
     private String madeIn;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnoreProperties(value = "product",allowSetters = true)
+    @JsonIgnore
     private List<ProductPrice> productPrices;
 
     @ManyToOne(optional = false)

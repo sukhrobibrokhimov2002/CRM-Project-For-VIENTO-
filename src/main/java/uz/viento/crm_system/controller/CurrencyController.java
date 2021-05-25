@@ -2,6 +2,7 @@ package uz.viento.crm_system.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.viento.crm_system.entity.CurrencyType;
 import uz.viento.crm_system.payload.CurrencyDto;
@@ -17,28 +18,28 @@ public class CurrencyController {
     @Autowired
     CurrencyService currencyService;
 
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PostMapping("/add")
     public ResponseEntity<?> addCurrency(@RequestBody CurrencyDto currencyDto) {
         ResponseApi responseApi = currencyService.addCurrency(currencyDto);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PatchMapping("/edit/{id}")
     public ResponseEntity<?> editCurrency(@PathVariable Long id, @RequestBody CurrencyDto currencyDto) {
         ResponseApi responseApi = currencyService.editCurrency(id, currencyDto);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteCurrency(@PathVariable Long id) {
         ResponseApi responseApi = currencyService.deleteCurrency(id);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
-
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @GetMapping("/getAll")
     public ResponseEntity<?> getAll() {
         List<CurrencyType> currencies = currencyService.getCurrencies();

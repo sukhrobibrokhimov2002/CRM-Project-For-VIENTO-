@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uz.viento.crm_system.entity.OrderOutputService;
+import uz.viento.crm_system.entity.enums.OrderOutputStatus;
 import uz.viento.crm_system.payload.OrderOutputServiceDto;
 import uz.viento.crm_system.payload.ResOutputServiceDto;
 import uz.viento.crm_system.payload.ResponseApi;
@@ -26,6 +27,24 @@ public class OrderOutputServiceLogic {
     OrderOutputServiceRepository orderOutputServiceRepository;
     @Autowired
     ServiceRepository serviceRepository;
+
+
+    public ResponseApiWithObject saveOrderService(OrderOutputStatus orderOutputStatus, UUID id) {
+        Optional<uz.viento.crm_system.entity.Service> optionalService = serviceRepository.findById(id);
+        if (!optionalService.isPresent()) {
+            return new ResponseApiWithObject("Service not found", false, null);
+        }
+        uz.viento.crm_system.entity.Service service = optionalService.get();
+        OrderOutputService orderOutputService = new OrderOutputService(
+                service,
+                service.getServiceFee(),
+                orderOutputStatus
+        );
+        OrderOutputService savedOrderOutputService = orderOutputServiceRepository.save(orderOutputService);
+
+        return new ResponseApiWithObject("Successfully added", true, savedOrderOutputService);
+
+    }
 
 
     public ResponseApi delete(UUID id) {

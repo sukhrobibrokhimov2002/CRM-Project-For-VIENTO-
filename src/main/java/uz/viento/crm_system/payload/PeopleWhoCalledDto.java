@@ -26,7 +26,7 @@ public class PeopleWhoCalledDto {
     private ReqCreateUserDto reqCreateUserDto;
 
     private List<UUID> serviceId;
-    private List<UUID> productId;
+    private List<ReqOutputProductDto> reqOutputProductDtos;
     private LocalDate whenShouldCall;
     private String comment;
 

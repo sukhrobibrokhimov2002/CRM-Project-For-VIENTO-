@@ -6,20 +6,20 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uz.viento.crm_system.component.GetterProductValidPrice;
-import uz.viento.crm_system.entity.PeopleWhoCalled;
-import uz.viento.crm_system.entity.Product;
-import uz.viento.crm_system.entity.Roles;
-import uz.viento.crm_system.entity.User;
+import uz.viento.crm_system.entity.*;
+import uz.viento.crm_system.entity.enums.OrderOutputStatus;
 import uz.viento.crm_system.entity.enums.RoleName;
 import uz.viento.crm_system.entity.enums.Status;
 import uz.viento.crm_system.payload.*;
 import uz.viento.crm_system.repository.*;
 
+import javax.transaction.Transactional;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 
 @Service
+@Transactional
 public class PeopleWhoCalledService {
 
     @Autowired
@@ -34,13 +34,25 @@ public class PeopleWhoCalledService {
     RoleRepository roleRepository;
     @Autowired
     GetterProductValidPrice getterProductValidPrice;
+    @Autowired
+    OrderOutputProductService orderOutputProductService;
+    @Autowired
+    OrderOutputServiceLogic orderOutputServiceLogic;
+    @Autowired
+    OrderService orderService;
+    @Autowired
+    CurrencyRepository currencyRepository;
+    @Autowired
+    OrderOutputProductRepository orderOutputProductRepository;
+    @Autowired
+    OrderOutputServiceRepository orderOutputServiceRepository;
 
     public ResponseApi add(PeopleWhoCalledDto peopleWhoCalledDto) {
         User user;
         Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(peopleWhoCalledDto.getPhoneNumber());
         if (!byPhoneNumber.isPresent()) {
 
-            ResponseApiWithObject userForCalled = getterProductValidPrice.createUserForCalled(peopleWhoCalledDto.getPhoneNumber(),peopleWhoCalledDto.getReqCreateUserDto());
+            ResponseApiWithObject userForCalled = getterProductValidPrice.createUserForCalled(peopleWhoCalledDto.getPhoneNumber(), peopleWhoCalledDto.getReqCreateUserDto());
             user = (User) userForCalled.getObject();
         } else {
             user = byPhoneNumber.get();
@@ -52,13 +64,27 @@ public class PeopleWhoCalledService {
             return new ResponseApi("You can not arrange meeting for past)", false);
         }
 
-        List<uz.viento.crm_system.entity.Service> serviceList = new ArrayList<>();
-        List<Product> productList = new ArrayList<>();
+        List<OrderOutputService> serviceList = new ArrayList<>();
+        List<OrderOutputProduct> productList = new ArrayList<>();
         if (peopleWhoCalledDto.getServiceId() != null) {
-            serviceList = serviceRepository.findAllById(peopleWhoCalledDto.getServiceId());
+            for (UUID serviceId : peopleWhoCalledDto.getServiceId()) {
+                ResponseApiWithObject responseApiWithObject = orderOutputServiceLogic.saveOrderService(OrderOutputStatus.WAITING, serviceId);
+                OrderOutputService outputService = (OrderOutputService) responseApiWithObject.getObject();
+                serviceList.add(outputService);
+            }
         }
-        if (peopleWhoCalledDto.getProductId() != null) {
-            productList = productRepository.findAllById(peopleWhoCalledDto.getProductId());
+        //product output ga saqlash uchun
+        if (peopleWhoCalledDto.getReqOutputProductDtos() != null) {
+            for (ReqOutputProductDto reqOutputProductDto : peopleWhoCalledDto.getReqOutputProductDtos()) {
+                ResponseApiWithObject responseApiWithObject =
+                        orderOutputProductService.saveOrderOutputProduct(OrderOutputStatus.WAITING, reqOutputProductDto);
+                if (!responseApiWithObject.isSuccess())
+                    return new ResponseApi("" + responseApiWithObject.getMessage(), false);
+                OrderOutputProduct orderOutputProduct = (OrderOutputProduct) responseApiWithObject.getObject();
+
+                productList.add(orderOutputProduct);
+            }
+
         }
         PeopleWhoCalled peopleWhoCalled = new PeopleWhoCalled(
                 user,
@@ -74,6 +100,79 @@ public class PeopleWhoCalledService {
 
 
         return new ResponseApi("Muvaffaqiyatli saqlandi", true);
+    }
+
+    public ResponseApi makeOrderByPeopleWhoCalled(Long id, ReqOrderByPeopleWhoCalled reqOrder) {
+        OrderDto orderDto = new OrderDto();
+
+        Optional<PeopleWhoCalled> calledOptional = peopleWhoCalledRepository.findById(id);
+        if (!calledOptional.isPresent()) return new ResponseApi("Not found", false);
+        PeopleWhoCalled peopleWhoCalled = calledOptional.get();
+        if (peopleWhoCalled.getStatus() != Status.WAITING) return new ResponseApi("this already ordered", false);
+
+
+
+        List outputList = new ArrayList();
+
+        if (peopleWhoCalled.getProduct() != null) {
+            List<OrderOutputProduct> product = peopleWhoCalled.getProduct();
+            for (OrderOutputProduct orderOutputProduct : product) {
+                orderOutputProduct.setOrderOutputStatus(OrderOutputStatus.ACCEPTED);
+
+                orderOutputProductRepository.save(orderOutputProduct);
+
+                ReqOutputProductDto reqOutputProductDto =
+                        new ReqOutputProductDto(
+                                orderOutputProduct.getProduct().getId(),
+                                orderOutputProduct.getAmount());
+                outputList.add(reqOutputProductDto);
+
+            }
+            orderDto = new OrderDto(
+                    reqOrder.getComment(),
+                    peopleWhoCalled.getPhoneNumber(),
+                    reqOrder.getAdditionalPhoneNumber(),
+                    reqOrder.getAddress(),
+                    reqOrder.getCurrencyId(),
+                    false,
+                    null,
+                    outputList,
+                    null
+            );
+        } else if (peopleWhoCalled.getService() != null) {
+            List<OrderOutputService> service = peopleWhoCalled.getService();
+            for (OrderOutputService orderOutputService : service) {
+                orderOutputService.setOrderOutputStatus(OrderOutputStatus.ACCEPTED);
+
+                orderOutputServiceRepository.save(orderOutputService);
+
+                OrderOutputServiceDto orderOutputServiceDto =
+                        new OrderOutputServiceDto(
+                                orderOutputService.getId()
+                        );
+                outputList.add(orderOutputService);
+            }
+            orderDto = new OrderDto(
+                    reqOrder.getComment(),
+                    peopleWhoCalled.getPhoneNumber(),
+                    reqOrder.getAdditionalPhoneNumber(),
+                    reqOrder.getAddress(),
+                    reqOrder.getCurrencyId(),
+                    false,
+                    null,
+                    outputList,
+                    null
+            );
+        }
+
+
+        peopleWhoCalled.setStatus(Status.COMPLETED);
+        peopleWhoCalledRepository.save(peopleWhoCalled);
+        orderService.Order(orderDto);
+
+        return new ResponseApi("Successfully ordered", true);
+
+
     }
 
 
@@ -92,6 +191,7 @@ public class PeopleWhoCalledService {
         return new ResponseApi("Successfully changed", true);
     }
 
+
     /*
     returns people who did not recieve a call on arranged time
      */
@@ -102,6 +202,7 @@ public class PeopleWhoCalledService {
         List<PeopleWhoCalled> missedPeople = peopleWhoCalledRepository.getMissedPeople();
         for (PeopleWhoCalled missedPerson : missedPeople) {
             ResPeopleWhoCalled resPeopleWhoCalled = new ResPeopleWhoCalled(
+                    missedPerson.getUsers().getFullName(),
                     returnServiceName(missedPerson.getService()),
                     returnProductName(missedPerson.getProduct()),
                     missedPerson.getPhoneNumber(),
@@ -130,6 +231,8 @@ public class PeopleWhoCalledService {
         List<PeopleWhoCalled> missedPeople = peopleWhoCalledRepository.getPeopleForCallingToday();
         for (PeopleWhoCalled missedPerson : missedPeople) {
             ResPeopleWhoCalled resPeopleWhoCalled = new ResPeopleWhoCalled(
+                    missedPerson.getUsers().getFullName(),
+                    missedPerson.getUsers().getAdditionalPhoneNumber(),
                     returnServiceName(missedPerson.getService()),
                     returnProductName(missedPerson.getProduct()),
                     missedPerson.getPhoneNumber(),
@@ -156,9 +259,11 @@ public class PeopleWhoCalledService {
         List<PeopleWhoCalled> shouldCallPeople = peopleWhoCalledRepository.getShouldCallPeople();
         for (PeopleWhoCalled shouldCall : shouldCallPeople) {
             ResPeopleWhoCalled resPeopleWhoCalled = new ResPeopleWhoCalled(
+                    shouldCall.getUsers().getFullName(),
+                    shouldCall.getPhoneNumber(),
                     returnServiceName(shouldCall.getService()),
                     returnProductName(shouldCall.getProduct()),
-                    shouldCall.getPhoneNumber(),
+                    shouldCall.getUsers().getAdditionalPhoneNumber(),
                     shouldCall.getWhenShouldCall(),
                     shouldCall.getComment(),
                     shouldCall.getStatus()
@@ -185,6 +290,8 @@ public class PeopleWhoCalledService {
         List<PeopleWhoCalled> getall = peopleWhoCalledRepository.findAll();
         for (PeopleWhoCalled peopleWhoCalled : getall) {
             ResPeopleWhoCalled resPeopleWhoCalled = new ResPeopleWhoCalled(
+                    peopleWhoCalled.getUsers().getFullName(),
+                    peopleWhoCalled.getUsers().getAdditionalPhoneNumber(),
                     returnServiceName(peopleWhoCalled.getService()),
                     returnProductName(peopleWhoCalled.getProduct()),
                     peopleWhoCalled.getPhoneNumber(),
@@ -214,19 +321,20 @@ public class PeopleWhoCalledService {
 
 
     //method for extracting some properties from productList
-    public List<String> returnProductName(List<Product> list) {
+    public List<String> returnProductName(List<OrderOutputProduct> list) {
         List<String> productList = new ArrayList<>();
-        for (Product product : list) {
-            productList.add(product.getNameEng());
+        for (OrderOutputProduct orderOutputProduct : list) {
+            productList.add(orderOutputProduct.getProduct().getNameEng());
         }
         return productList;
     }
 
     //method for extracting some properties from ServiceList
-    public List<String> returnServiceName(List<uz.viento.crm_system.entity.Service> list) {
+    public List<String> returnServiceName(List<OrderOutputService> list) {
         List<String> serviceList = new ArrayList<>();
-        for (uz.viento.crm_system.entity.Service service : list) {
-            serviceList.add(service.getName());
+        for (OrderOutputService orderOutputService : list) {
+            String name = orderOutputService.getService().getName();
+            serviceList.add(name);
         }
         return serviceList;
     }

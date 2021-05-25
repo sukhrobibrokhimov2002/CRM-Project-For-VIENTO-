@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import uz.viento.crm_system.entity.enums.OrderOutputStatus;
 import uz.viento.crm_system.entity.template.AbsUUIDEntity;
 
 import javax.persistence.*;
@@ -22,8 +23,8 @@ public class OrderOutputProduct extends AbsUUIDEntity {
     private Double amount;
 
     private Double totalPrice;
-
-
+    @Enumerated(EnumType.STRING)
+    private OrderOutputStatus orderOutputStatus;
 
 
 

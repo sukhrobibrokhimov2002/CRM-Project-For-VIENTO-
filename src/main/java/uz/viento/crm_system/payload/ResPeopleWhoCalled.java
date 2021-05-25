@@ -35,12 +35,14 @@ public class ResPeopleWhoCalled {
 
     private Status status;
 
-    public ResPeopleWhoCalled(List<String> serviceName, List<String> productName, String phoneNumber, LocalDate whenShouldCall, String comment, Status status) {
+    public ResPeopleWhoCalled(String fullName,List<String> serviceName, List<String> productName, String phoneNumber, LocalDate whenShouldCall, String comment, Status status) {
+        this.fullName=fullName;
         this.serviceName = serviceName;
         this.productName = productName;
         this.phoneNumber = phoneNumber;
         this.whenShouldCall = whenShouldCall;
         this.comment = comment;
         this.status = status;
+
     }
 }

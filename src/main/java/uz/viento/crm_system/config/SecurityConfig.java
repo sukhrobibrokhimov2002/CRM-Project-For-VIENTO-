@@ -29,7 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .httpBasic().disable()
                 .authorizeRequests()
-                .antMatchers("/auth/login", "/auth/register")
+                .antMatchers("/auth/login", "/auth/register","/v3/api-docs/**","/**", "/swagger-ui/**", "/swagger-ui.html")
                 .permitAll()
                 .anyRequest().authenticated();
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

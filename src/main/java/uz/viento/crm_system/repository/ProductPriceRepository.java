@@ -11,5 +11,6 @@ public interface ProductPriceRepository extends JpaRepository<ProductPrice, Long
 
     Optional<ProductPrice> findByValidAndProduct_Id(boolean valid, UUID product_id);
 
+    List<ProductPrice> findAllByProduct_Id(UUID product_id);
 }
 

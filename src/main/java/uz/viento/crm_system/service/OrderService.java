@@ -8,10 +8,12 @@ import org.springframework.stereotype.Service;
 import uz.viento.crm_system.component.GenerateSerialNumber;
 import uz.viento.crm_system.component.GetterProductValidPrice;
 import uz.viento.crm_system.entity.*;
+import uz.viento.crm_system.entity.enums.OrderOutputStatus;
 import uz.viento.crm_system.entity.enums.StatusOrder;
 import uz.viento.crm_system.payload.*;
 import uz.viento.crm_system.repository.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class OrderService {
 
     @Autowired
@@ -39,6 +42,10 @@ public class OrderService {
     CurrencyRepository currencyRepository;
     @Autowired
     GenerateSerialNumber generateSerialNumber;
+    @Autowired
+    OrderOutputProductService orderOutputProductService;
+    @Autowired
+    OrderOutputServiceLogic orderOutputServiceLogic;
 
 
     public ResponseApi Order(OrderDto orderDto) {
@@ -62,19 +69,26 @@ public class OrderService {
         if (orderDto.getReqOutputProductDtos() != null) {
             List<ReqOutputProductDto> reqOutputProductDtos = orderDto.getReqOutputProductDtos();
 
-
+//work with products
             for (ReqOutputProductDto reqOutputProductDto : reqOutputProductDtos) {
                 Optional<Product> optionalProduct = productRepository.findById(reqOutputProductDto.getProductId());
                 if (!optionalProduct.isPresent()) return new ResponseApi("Product not found", false);
+                Product product = optionalProduct.get();
+                product.setAmount(product.getAmount() - reqOutputProductDto.getAmount());
 
-                OrderOutputProduct orderOutputProduct = new OrderOutputProduct();
-                orderOutputProduct.setProduct(optionalProduct.get());
-                orderOutputProduct.setProductPrice(getterProductValidPrice.findValidPrice(optionalProduct.get()));
-                orderOutputProduct.setAmount(reqOutputProductDto.getAmount());
-                orderOutputProduct.setTotalPrice(reqOutputProductDto.getAmount() * getterProductValidPrice.findValidSelling(optionalProduct.get()));
-                OrderOutputProduct orderOutputProduct1 = orderOutputProductRepository.save(orderOutputProduct);
-                orderOutputList.add(orderOutputProduct1);
+                productRepository.save(product);
+                //it checks product is expired or have enough quantity for sell
+                if (product.isExpired() || product.getAmount() < reqOutputProductDto.getAmount()) {
+                    product.setAvailable(false);
+                    productRepository.save(product);
+                    return new ResponseApi("Product not left", false);
+                }
+
+                ResponseApiWithObject responseApiWithObject = orderOutputProductService.saveOrderOutputProduct(OrderOutputStatus.ACCEPTED, reqOutputProductDto);
+                OrderOutputProduct orderOutputProduct = (OrderOutputProduct) responseApiWithObject.getObject();
+                orderOutputList.add(orderOutputProduct);
                 summa += orderOutputProduct.getTotalPrice();
+                productRepository.save(product);
             }
 
         } else if (orderDto.getOrderOutputServiceDtos() != null) {
@@ -83,12 +97,10 @@ public class OrderService {
                 Optional<uz.viento.crm_system.entity.Service> optionalService = serviceRepository.findById(outputService.getServiceId());
                 if (!optionalService.isPresent()) return new ResponseApi("Service not found", false);
 
-                OrderOutputService orderOutputService =
-                        new OrderOutputService(
-                                optionalService.get(),
-                                optionalService.get().getServiceFee()
+                ResponseApiWithObject responseApiWithObject = orderOutputServiceLogic.saveOrderService(OrderOutputStatus.ACCEPTED, optionalService.get().getId());
+                OrderOutputService orderOutputService = (OrderOutputService) responseApiWithObject.getObject();
 
-                        );
+
                 OrderOutputService save = orderOutputServiceRepository.save(orderOutputService);
                 orderOutputList.add(save);
                 summa += save.getTotalPrice();
@@ -104,10 +116,12 @@ public class OrderService {
         order.setStatusOrder(StatusOrder.ACCEPTED);
         order.setAddress(orderDto.getAddress());
 
+
         order.setCode(generateSerialNumber.randomUniqueNumber());
         order.setComment(orderDto.getComment());
         order.setSumma(summa);
         order.setUsers(user);
+        order.setCurrencyType(optionalCurrencyType.get());
         order.setPhoneNumber(orderDto.getPhoneNumber());
 
         if (orderDto.getOrderOutputServiceDtos() != null) {

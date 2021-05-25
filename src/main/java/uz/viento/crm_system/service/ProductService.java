@@ -428,4 +428,19 @@ public class ProductService {
     }
 
 
+    public List<ResProductPrice> getProductPrice(UUID id) {
+        List<ProductPrice> allByProduct_id = productPriceRepository.findAllByProduct_Id(id);
+        List<ResProductPrice> list = new ArrayList();
+        for (ProductPrice productPrice : allByProduct_id) {
+            ResProductPrice resProductPrice = new ResProductPrice(
+                    productPrice.getOriginalPrice(),
+                    productPrice.getSellingPrice(),
+                    productPrice.getChangedDate(),
+                    productPrice.isValid()
+
+            );
+            list.add(resProductPrice);
+        }
+        return list;
+    }
 }

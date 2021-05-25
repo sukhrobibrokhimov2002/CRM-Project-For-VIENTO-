@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import uz.viento.crm_system.entity.enums.OrderOutputStatus;
 import uz.viento.crm_system.entity.template.AbsUUIDEntity;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ManyToOne;
 
 @EqualsAndHashCode(callSuper = true)
@@ -19,6 +22,7 @@ public class OrderOutputService extends AbsUUIDEntity {
     private Service service;
 
     private Double totalPrice;
-
+    @Enumerated(EnumType.STRING)
+    private OrderOutputStatus orderOutputStatus;
 
 }

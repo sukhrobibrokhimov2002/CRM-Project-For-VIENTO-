@@ -22,9 +22,9 @@ public class PeopleWhoCalled extends AbsLongEntity {
     @ManyToOne
     private User users;
     @ManyToMany
-    private List<Service> service;
+    private List<OrderOutputService> service;
     @ManyToMany
-    private List<Product> product;
+    private List<OrderOutputProduct> product;
 
     private String phoneNumber;
 
