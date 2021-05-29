@@ -28,6 +28,7 @@ public class UserController {
         return ResponseEntity.status(409).body(responseApi);
 
     }
+
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PatchMapping("/change-own-password")
     public ResponseEntity<?> changePassword(@RequestBody ReqChangePassword reqChangePassword, @CurrentUser User user) {
@@ -35,6 +36,7 @@ public class UserController {
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
+
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PatchMapping("/forget-password")
     public ResponseEntity<?> forgetPassword(@RequestBody ReqForgetPassword reqForgetPassword) {
@@ -44,6 +46,7 @@ public class UserController {
 
 
     }
+
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PostMapping("/change-own-phoneNumber")
     public ResponseEntity<?> changePhoneNumber(@RequestBody ReqChangePassword reqChangePassword, @CurrentUser User user) {
@@ -64,9 +67,16 @@ public class UserController {
 
 
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
-    @GetMapping("/get-all")
+    @GetMapping("/get-all-user")
     public ResponseEntity<?> getAllUser(@RequestParam Integer page) {
         Page<ResUser> allUser = userService.getAllUser(page);
+        return ResponseEntity.ok(allUser);
+    }
+
+    @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
+    @GetMapping("/get-all-admin")
+    public ResponseEntity<?> getAllAdmin(@RequestParam Integer page) {
+        Page<ResUser> allUser = userService.getAllAdmin(page);
         return ResponseEntity.ok(allUser);
     }
 

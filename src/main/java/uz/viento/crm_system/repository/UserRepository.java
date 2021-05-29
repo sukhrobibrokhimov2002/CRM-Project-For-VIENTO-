@@ -22,4 +22,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findAllByPassword(String password);
 
 
+    Optional<List<User>> findAllByRoles(Roles roles);
+
+
+
+
+
 }

@@ -48,7 +48,7 @@ public class OrderService {
     OrderOutputServiceLogic orderOutputServiceLogic;
 
 
-    public ResponseApi Order(OrderDto orderDto) {
+    public ResponseApi order(OrderDto orderDto) {
         User user;
         List orderOutputList = new ArrayList<>();
         Double summa = 0.0;
@@ -131,7 +131,7 @@ public class OrderService {
         }
 
         orderRepository.save(order);
-        return new ResponseApi("Successfully ordered", false);
+        return new ResponseApi("Successfully ordered", true);
 
     }
 

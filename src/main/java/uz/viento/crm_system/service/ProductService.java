@@ -135,57 +135,34 @@ public class ProductService {
         if (!optionalProduct.isPresent()) return new ResponseApi("Product not found", false);
         Product oldProduct = optionalProduct.get();
 
-        Product newProduct = new Product();
-        newProduct.setExpireDate(addAdditionalProductDto.getExpireDate());
-        newProduct.setEnterDate(new Date(System.currentTimeMillis()));
-
-        //Product is available when its amount more than 0 and it is not expired
-        if (addAdditionalProductDto.getAmount() <= 0 && addAdditionalProductDto.getExpireDate().before(new Date(System.currentTimeMillis()))) {
-            newProduct.setAvailable(false);
-        } else {
-            newProduct.setAvailable(true);
+        if (addAdditionalProductDto.getExpireDate().before(new Date(System.currentTimeMillis())) ||
+                addAdditionalProductDto.getAmount() < 1) {
+            return new ResponseApi("Error", false);
+        }
+        oldProduct.setAmount(oldProduct.getAmount() + addAdditionalProductDto.getAmount());
+        oldProduct.setEnterDate(addAdditionalProductDto.getExpireDate());
+        if(oldProduct.isExpired()){
+            oldProduct.setExpired(false);
         }
 
+        ProductPrice validPrice = getSellingPrice.findValidPrice(oldProduct);
+        validPrice.setValid(false);
 
-        //if product is expired,it must not be sold anymore
-        if (oldProduct.getExpireDate().after(new Date(System.currentTimeMillis()))) {
-            newProduct.setAmount(oldProduct.getAmount() + addAdditionalProductDto.getAmount());
-            newProduct.setExpired(false);
-            oldProduct.setAmount(0d);
-        } else {
-            newProduct.setAmount(addAdditionalProductDto.getAmount());
-            oldProduct.setAmount(0d);
-            oldProduct.setExpired(true);
-        }
-        oldProduct.setAvailable(false);
-
-        newProduct.setMadeIn(oldProduct.getMadeIn());
-        newProduct.setMeasurement(oldProduct.getMeasurement());
-        newProduct.setCategory(oldProduct.getCategory());
-        newProduct.setCurrencyType(oldProduct.getCurrencyType());
-        newProduct.setNameUz(oldProduct.getNameUz());
-        newProduct.setNameRu(oldProduct.getNameRu());
-        newProduct.setNameEng(oldProduct.getNameEng());
-        newProduct.setDescriptionUz(oldProduct.getDescriptionUz());
-        newProduct.setDescriptionRu(oldProduct.getDescriptionRu());
-        newProduct.setDescriptionEng(oldProduct.getDescriptionEng());
-
-        ProductPrice oldValidPrice = getSellingPrice.findValidPrice(oldProduct);
-        oldValidPrice.setValid(false);
-
-        ProductPrice productPrice = new ProductPrice();
-        productPrice.setProduct(newProduct);
-        productPrice.setSellingPrice(addAdditionalProductDto.getSellingPrice());
-        productPrice.setOriginalPrice(addAdditionalProductDto.getOriginalPrice());
-        productPrice.setValid(true);
-        productPrice.setChangedDate(new Date(System.currentTimeMillis()));
-        productPriceRepository.save(oldValidPrice);
-        productPriceRepository.save(productPrice);
+        ProductPrice productPrice = new ProductPrice(
+                addAdditionalProductDto.getOriginalPrice(),
+                addAdditionalProductDto.getSellingPrice(),
+                new Date(System.currentTimeMillis()),
+                oldProduct,
+                true
+        );
 
 
-        productRepository.save(newProduct);
         productRepository.save(oldProduct);
-        return new ResponseApi("Product successfully added", true);
+        //eski narx valid o'chirildi
+        productPriceRepository.save(validPrice);
+        //yangi narx belgilandi
+        productPriceRepository.save(productPrice);
+        return new ResponseApi("Successfully changed", true);
     }
 
     public ResponseApi deleteProduct(UUID id) {

@@ -192,4 +192,30 @@ public class UserService {
         userRepository.save(user);
         return new ResponseApi("Password successfully changed", true);
     }
+    public Page<ResUser> getAllAdmin(int page) {
+
+        List<ResUser> userList = new ArrayList<>();
+
+        PageRequest pageRequest = PageRequest.of(page, 10);
+        Optional<Roles> optionalRoles = roleRepository.findByRoleName(RoleName.ROLE_ADMIN);
+
+
+        Optional<List<User>> optionalUsers=userRepository.findAllByRoles(optionalRoles.get());
+        if (!optionalUsers.isPresent())
+            return null;
+        List<User> userList1 = optionalUsers.get();
+
+        for (User user : userList1) {
+            ResUser resUser = new ResUser(
+                    user.getFullName(),
+                    user.getPhoneNumber(),
+                    user.getAddress()
+            );
+            userList.add(resUser);
+        }
+        Page<ResUser> resUsers = new PageImpl<>(userList, pageRequest, userList.size());
+        return resUsers;
+    }
+
+
 }

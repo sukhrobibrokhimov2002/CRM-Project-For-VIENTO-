@@ -23,7 +23,7 @@ public class OrderController {
     @PreAuthorize("hasAnyRole(ROLE_ADMIN)")
     @PostMapping("/make-order")
     public ResponseEntity<?> makeOrder(@RequestBody OrderDto orderDto) {
-        ResponseApi order = orderService.Order(orderDto);
+        ResponseApi order = orderService.order(orderDto);
         if (order.isSuccess()) return ResponseEntity.ok(order);
         return ResponseEntity.status(409).body(order);
     }
@@ -52,11 +52,5 @@ public class OrderController {
         return ResponseEntity.status(409).body(oneOrder);
     }
 
-    @PutMapping("/reject-order")
-    public ResponseEntity<?> rejectOrder(@PathVariable UUID id) {
-        ResponseApi responseApi = orderService.rejectOrder(id);
-        if (responseApi.isSuccess())
-            return ResponseEntity.ok(responseApi);
-        return ResponseEntity.status(409).body(responseApi);
-    }
+
 }

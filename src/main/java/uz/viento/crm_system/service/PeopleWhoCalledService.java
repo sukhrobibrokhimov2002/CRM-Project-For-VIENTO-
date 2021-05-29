@@ -168,7 +168,8 @@ public class PeopleWhoCalledService {
 
         peopleWhoCalled.setStatus(Status.COMPLETED);
         peopleWhoCalledRepository.save(peopleWhoCalled);
-        orderService.Order(orderDto);
+        orderService.order(orderDto);
+
 
         return new ResponseApi("Successfully ordered", true);
 
