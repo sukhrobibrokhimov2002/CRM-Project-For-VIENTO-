@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: ${ACTIVE_PROFILE:h2}
+  jpa.hibernate.ddl-auto: create
+  datasource.initialization-mode: always
+
+server.error.include-binding-errors: always
+spring.jpa.show-sql: true
+spring.servlet.multipart.max-file-size: 100MB
+spring.servlet.multipart.max-request-size: 100MB
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans: true
+server.error.include-message: always
+app.jwtSecret: MyApiSupperMupperKey
+app.jwtExpirationInMs: 1728000000
+

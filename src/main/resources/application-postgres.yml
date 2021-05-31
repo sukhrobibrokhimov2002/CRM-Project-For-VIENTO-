@@ -1,0 +1,12 @@
+#spring.datasource.url=postgres://cqhkomrehtkgli:39bce7ad40cc67544947c99612f70790b991a27da8adcc50322eb917cf0d1d46@ec2-52-0-114-209.compute-1.amazonaws.com:5432/d3rmecvrcbdo4e
+#spring.datasource.username=cqhkomrehtkgli
+#spring.datasource.password=39bce7ad40cc67544947c99612f70790b991a27da8adcc50322eb917cf0d1d46logs --tail
+#
+
+
+#spring.datasource.url=jdbc:postgresql://ec2-52-0-114-209.compute-1.amazonaws.com:5432/d3rmecvrcbdo4e
+#spring.datasource.username=cqhkomrehtkgli
+#spring.datasource.password=39bce7ad40cc67544947c99612f70790b991a27da8adcc50322eb917cf0d1d46
+#SPRING_DATASOURCE_DRIVER-CLASS-NAME= org.postgresql.Driver
+#SPRING_JPA_DATABASE-PLATFORM = org.hibernate.dialect.PostgreSQLDialect
+#SPRING_DATASOURCE_TYPE = org.apache.tomcat.jdbc.pool.DataSource
