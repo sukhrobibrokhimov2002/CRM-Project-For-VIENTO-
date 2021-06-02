@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import uz.viento.crm_system.payload.*;
 import uz.viento.crm_system.repository.AttachmentRepository;
 import uz.viento.crm_system.repository.RoleRepository;
 import uz.viento.crm_system.repository.UserRepository;
+import uz.viento.crm_system.security.JwtProvider;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,24 +36,36 @@ public class UserService {
     RoleRepository roleRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    AuthenticationManager authenticationManager;
+    @Autowired
+    JwtProvider jwtProvider;
 
 
-    public ResponseApi registerAdmin(RegisterDto userDto) throws IOException {
-        boolean existsByPhoneNumber = userRepository.existsByPhoneNumber(userDto.getPhoneNumber());
-        if (existsByPhoneNumber) return new ResponseApi("User already have", false);
-        if (!userDto.getPassword().equals(userDto.getPrePassword()))
-            return new ResponseApi("Passwords don't match", false);
-        Optional<Roles> roleName = roleRepository.findByRoleName(RoleName.ROLE_USER);
-        if (!roleName.isPresent()) return new ResponseApi("Role Not found", false);
-        Roles roles = roleName.get();
+    public ResponseApiWithObject registerAdmin(RegisterDto userDto) throws IOException {
+        try {
+            boolean existsByPhoneNumber = userRepository.existsByPhoneNumber(userDto.getPhoneNumber());
+            if (existsByPhoneNumber) return new ResponseApiWithObject("User already have", false, null);
+            if (!userDto.getPassword().equals(userDto.getPrePassword()))
+                return new ResponseApiWithObject("Passwords don't match", false, null);
+            Optional<Roles> roleName = roleRepository.findByRoleName(RoleName.ROLE_USER);
+            if (!roleName.isPresent()) return new ResponseApiWithObject("Role Not found", false, null);
+            Roles roles = roleName.get();
 
-        User user = new User();
-        user.setFullName(userDto.getFullName());
-        user.setRoles(Collections.singletonList(roles));
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setPhoneNumber(userDto.getPhoneNumber());
-        userRepository.save(user);
-        return new ResponseApi("Successfully registered", true);
+            User user = new User();
+            user.setFullName(userDto.getFullName());
+            user.setRoles(Collections.singletonList(roles));
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            user.setPhoneNumber(userDto.getPhoneNumber());
+            userRepository.save(user);
+            Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    userDto.getPhoneNumber(), userDto.getPassword()));
+            User authenticatedUser = (User) authenticate.getPrincipal();
+            String token = jwtProvider.generateToken(authenticatedUser.getPhoneNumber());
+            return new ResponseApiWithObject("Successfully registered", true, token);
+        } catch (Exception e) {
+            return new ResponseApiWithObject("Error", false, null);
+        }
     }
 
 
@@ -192,6 +208,7 @@ public class UserService {
         userRepository.save(user);
         return new ResponseApi("Password successfully changed", true);
     }
+
     public Page<ResUser> getAllAdmin(int page) {
 
         List<ResUser> userList = new ArrayList<>();
@@ -200,7 +217,7 @@ public class UserService {
         Optional<Roles> optionalRoles = roleRepository.findByRoleName(RoleName.ROLE_ADMIN);
 
 
-        Optional<List<User>> optionalUsers=userRepository.findAllByRoles(optionalRoles.get());
+        Optional<List<User>> optionalUsers = userRepository.findAllByRoles(optionalRoles.get());
         if (!optionalUsers.isPresent())
             return null;
         List<User> userList1 = optionalUsers.get();

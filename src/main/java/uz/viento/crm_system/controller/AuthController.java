@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import uz.viento.crm_system.payload.LoginDto;
 import uz.viento.crm_system.payload.RegisterDto;
 import uz.viento.crm_system.payload.ResponseApi;
+import uz.viento.crm_system.payload.ResponseApiWithObject;
 import uz.viento.crm_system.service.AuthService;
 import uz.viento.crm_system.service.UserService;
 
@@ -33,7 +34,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto)throws IOException {
-        ResponseApi responseApi = userService.registerAdmin(registerDto);
+        ResponseApiWithObject responseApi = userService.registerAdmin(registerDto);
         if (responseApi.isSuccess()) return ResponseEntity.ok(responseApi);
         return ResponseEntity.status(409).body(responseApi);
     }
